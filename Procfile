@@ -1,1 +1,1 @@
-web: gunicorn main_app:server
+web: gunicorn -b localhost:8000 index:server

@@ -1,7 +1,7 @@
 from dash import Dash, html, dcc, Input, Output, State, callback_context, ALL, no_update
 import dash_bootstrap_components as dbc
 from BettingRPS.game_engine import BettingRPS
-from main_app import app
+from app import app
 
 # Initialize app
 # app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY], title='BettingRPS', update_title=None,
