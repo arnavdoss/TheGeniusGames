@@ -38,7 +38,7 @@ class BettingRPS:
                 else:
                     self.p1_chips -= bet_chips
                 if result == 'win':
-                    self.p2_chips += int(self.current_round / 3)
+                    self.p2_chips += int(self.current_round / 3) + 1
             else:
                 self.log.append(f'P2 Bets {bet_chips} chips that P1 will {bet_result} \n')
                 result = win_hand(played_hand, game_hand)
@@ -48,7 +48,7 @@ class BettingRPS:
                 else:
                     self.p2_chips -= bet_chips
                 if result == 'win':
-                    self.p1_chips += int(self.current_round / 3)
+                    self.p1_chips += int(self.current_round / 3) + 1
             self.log.append(f'Chips: P1 = {self.p1_chips}, P2 = {self.p2_chips} \n')
             self.current_round += 1
         else:
