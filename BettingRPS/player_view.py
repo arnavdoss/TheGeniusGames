@@ -1,10 +1,11 @@
 from dash import Dash, html, dcc, Input, Output, State, callback_context, ALL, no_update
 import dash_bootstrap_components as dbc
 from BettingRPS.game_engine import BettingRPS
+from main_app import app
 
 # Initialize app
-app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY], title='BettingRPS', update_title=None,
-           meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}])
+# app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY], title='BettingRPS', update_title=None,
+#            meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}])
 # CYBORG, DARKLY, SLATE, SOLAR, SUPERHERO, VAPOR, QUARTZ,
 
 # IDs
@@ -92,7 +93,7 @@ bet_hand_inputs = dbc.Row([
 ], align='center', justify='center', style={'height': '70vh'})
 
 # Layout
-app.layout = dbc.Container([
+layout = dbc.Container([
     html.Div(game_hands_display(), id=id_game_hands_wrapper),
     dcc.Store(id=id_bet_input, data=0),
     dcc.Store(id=id_play_input, data=None),
@@ -261,4 +262,5 @@ def switch_inputs_per_round(n1, n2):
 
 # Server
 if __name__ == '__main__':
+    app.layout = layout
     app.run_server(debug=True)
