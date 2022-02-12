@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import jsonpickle
 from BettingRPS.game_engine import BettingRPS
 from app import app
+import os
 
 # Initialize app
 # app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY], title='BettingRPS', update_title=None,
@@ -46,22 +47,24 @@ id_bet_lose = 'id_bet_lose'
 id_bet_result_confirm = 'id_bet_result_confirm'
 id_bet_result_input = 'id_bet_result_input'
 id_game_store = 'id_game_store'
+id_p1_collapse = 'id_p1_collapse'
+id_p2_collapse = 'id_p2_collapse'
+id_player_collapse = 'id_player_collapse'
+id_p1_button = 'id_p1_button'
+id_p2_button = 'id_p2_button'
+id_sync_timer = 'id_sync_timer'
+sync_file_path = 'betting_rps.txt'
 
 
-def game_hands_display(game):
-    game_hands = game.game_hands
-    n_rounds = game.n_rounds
-    round_hand_button = []
-    width = f'calc(100vw / {n_rounds * 1.5})'
-    for idx in range(n_rounds):
-        round_hand_button.append(
-            dbc.Button([
-                dbc.Row([game_hands[idx]], justify='center', style={'fontSize': width}), dbc.Row(html.H3(idx + 1))
-            ], id={'type': id_game_hands, 'index': idx}, outline=False, color='success', disabled=False,
-                style={'width': width, 'height': '25vh'}
-            )
-        )
-    return html.Div([dbc.Row([dbc.ButtonGroup(round_hand_button)], align='center', justify='center')])
+def game_hand_display(game):
+    game_hand = game.game_hands
+    curr_r = game.current_round
+    current_hand = dbc.ButtonGroup([
+        dbc.Button([html.H1(f'Round {curr_r}')], outline=False, color='primary', disabled=False),
+        dbc.Button([html.H1(game_hand[curr_r - 1])], outline=False, color='primary', disabled=False),
+    ], style={'width': '100%'})
+    print(game.game_hands)
+    return html.Div(current_hand)
 
 
 play_hand_inputs = dbc.Row([
@@ -93,71 +96,107 @@ bet_hand_inputs = dbc.Row([
 
 # Layout
 layout = dbc.Container([
+    dbc.Row([
+        dbc.ButtonGroup([
+            dbc.Button('Next Round', id=id_next_round),
+            dbc.Button('New Game', id=id_new_game),
+            dbc.Button('Show Log', id=id_show_log),
+        ]),
+        dbc.Modal([
+            dbc.ModalBody([], id=id_game_log, style={'white-space': 'pre-wrap'})
+        ], id=id_modal_log)
+    ]),
+    html.Br(),
+    dbc.Row([
+        html.Div([], id=id_game_hands_wrapper),
+    ]),
+    dcc.Interval(interval=500, id=id_sync_timer),
     dcc.Store(id=id_game_store, data=jsonpickle.encode(BettingRPS(11))),
-    html.Div([], id=id_game_hands_wrapper),
     dcc.Store(id=id_bet_input, data=0),
     dcc.Store(id=id_play_input, data=None),
     dcc.Store(id=id_bet_result_input, data=None),
     html.Br(),
     dbc.Row([
-        dbc.Col([
-            dbc.Row([
-                dbc.Col([
-                    html.Div(dbc.Row([dbc.Col(bet_inputs), dbc.Col(bet_hand_inputs)]), id=id_p1_inputs)
-                ], width=8),
-                dbc.Col([
-                    html.H1(0, id=id_p1_chips, style={'fontSize': '10vh'})
-                ], width=4, align='center')
-            ])
-        ], width=4, style={'border-top': '1px solid grey', 'border-right': '1px solid grey',
-                           'border-bottom': '1px solid grey', 'border-top-right-radius': '30px',
-                           'border-bottom-right-radius': '30px'}),
-        dbc.Col([
+        dbc.Collapse([
             dbc.ButtonGroup([
-                dbc.Button('Next Round', id=id_next_round),
-                dbc.Button('New Game', id=id_new_game),
-                dbc.Button('Show Log', id=id_show_log),
-            ]),
-            dbc.Modal([
-                dbc.ModalBody([], id=id_game_log, style={'white-space': 'pre-wrap'})
-            ], id=id_modal_log)
-        ], width=4, align='center', style={'height': '100%'}),
-        dbc.Col([
-            dbc.Row([
-                dbc.Col([
-                    html.H1(0, id=id_p2_chips, style={'fontSize': '10vh'})
-                ], width=4, align='center'),
-                dbc.Col([
-                    html.Div(play_hand_inputs, id=id_p2_inputs)
-                ], width=8)
+                dbc.Button('1', id=id_p1_button, outline=True, color='primary'),
+                dbc.Button('2', id=id_p2_button, outline=True, color='primary')
             ])
-        ], width=4, style={'border-top': '1px solid grey', 'border-left': '1px solid grey',
-                           'border-bottom': '1px solid grey', 'border-top-left-radius': '30px',
-                           'border-bottom-left-radius': '30px'}),
-    ], style={'height': '70vh'}, justify='center')
+        ], id=id_player_collapse, is_open=True)
+    ]),
+    dbc.Row([
+        dbc.Collapse([
+            dbc.Col([
+                html.H1(0, id=id_p1_chips, style={'fontSize': '10vh'})
+            ], width=12, align='center'),
+            dbc.Col([
+                html.Div(dbc.Row([dbc.Col(bet_inputs, width=6), dbc.Col(bet_hand_inputs, width=6)]), id=id_p1_inputs)
+            ], width=12),
+        ], id=id_p1_collapse, is_open=False),
+    ]),
+    dbc.Row([
+        dbc.Collapse([
+            dbc.Col([
+                html.H1(0, id=id_p2_chips, style={'fontSize': '10vh'})
+            ], width=12, align='center'),
+            dbc.Col([
+                html.Div(play_hand_inputs, id=id_p2_inputs)
+            ], width=12)
+        ], id=id_p2_collapse, is_open=False),
+    ]),
 ], fluid=True)
 
 
 # Callbacks
 @app.callback(
-    [Output(id_game_hands_wrapper, 'children'), Output(id_game_store, 'data'), Output(id_p1_chips, 'children'),
-     Output(id_p2_chips, 'children')],
-    [Input(id_play_confirm, 'active'), Input(id_bet_confirm, 'active'), Input(id_bet_result_confirm, 'active'),
-     Input(id_new_game, 'n_clicks')],
-    [State(id_play_input, 'data'), State(id_bet_input, 'data'), State(id_bet_result_input, 'data'),
-     State(id_game_store, 'data')]
+    [Output(id_player_collapse, 'is_open'), Output(id_p1_collapse, 'is_open'), Output(id_p2_collapse, 'is_open')],
+    [Input(id_p1_button, 'n_clicks'), Input(id_p2_button, 'n_clicks')], prevent_initial_call=True
 )
-def play_round(play_confirm, bet_confirm, bet_result_confirm, n, play_input, bet_input, bet_result_input, game):
+def choose_player(n1, n2):
+    call_id = callback_context.triggered[0]['prop_id'].split('.')[0]
+    if call_id == id_p1_button:
+        return [False, True, False]
+    elif call_id == id_p2_button:
+        return [False, False, True]
+    else:
+        return [no_update, no_update, no_update]
+
+
+@app.callback(
+    [Output(id_game_hands_wrapper, 'children'), Output(id_p1_chips, 'children'), Output(id_p2_chips, 'children'),
+     Output(id_p1_inputs, 'children'), Output(id_p2_inputs, 'children')],
+    [Input(id_new_game, 'n_clicks'), Input(id_game_store, 'data')],
+)
+def play_round(n, game):
     game = jsonpickle.decode(game)
     call_id = callback_context.triggered[0]['prop_id'].split('.')[0]
-    print(call_id)
+    p1_state = no_update
+    p2_state = no_update
     if call_id == id_new_game or call_id == '':
-        game.new_game(11)
-        return [game_hands_display(game), jsonpickle.encode(game), game.p1_chips, game.p2_chips]
+        game = BettingRPS(11)
+        with open(sync_file_path, 'w') as outfile:
+            outfile.write(jsonpickle.encode(game))
+        p2_state = dbc.Row([dbc.Col(bet_inputs, width=6), dbc.Col(bet_hand_inputs, width=6)])
+        p1_state = play_hand_inputs
     elif game.current_round <= game.n_rounds:
-        if play_confirm is True and bet_confirm is True and bet_result_confirm is True:
-            game.play_round(play_input, bet_result_input, bet_input)
-        return [no_update, jsonpickle.encode(game), game.p1_chips, game.p2_chips]
+        if game.hand_played is not None and game.bet_chips is not None and game.bet_result is not None:
+            game.play_round(game.hand_played, game.bet_result, game.bet_chips)
+            with open(sync_file_path, 'w') as outfile:
+                outfile.write(jsonpickle.encode(game))
+            if game.current_round % 2 == 0:
+                p1_state = dbc.Row([dbc.Col(bet_inputs, width=6), dbc.Col(bet_hand_inputs, width=6)])
+                p2_state = play_hand_inputs
+            else:
+                p2_state = dbc.Row([dbc.Col(bet_inputs, width=6), dbc.Col(bet_hand_inputs, width=6)])
+                p1_state = play_hand_inputs
+    return [game_hand_display(game), game.p1_chips, game.p2_chips, p1_state, p2_state]
+
+
+@app.callback(Output(id_game_store, 'data'), Input(id_sync_timer, 'n_intervals'))
+def sync_game(n):
+    with open(sync_file_path, 'r') as infile:
+        game_json = infile.read()
+    return game_json
 
 
 @app.callback([Output(id_modal_log, 'is_open'), Output(id_game_log, 'children')], Input(id_show_log, 'n_clicks'),
@@ -168,27 +207,19 @@ def show_log(n, game):
 
 
 @app.callback(
-    Output({'type': id_game_hands, 'index': ALL}, 'active'),
-    Input(id_next_round, 'n_clicks'),
-    [State({'type': id_game_hands, 'index': ALL}, 'active'), State(id_game_store, 'data')]
-)
-def which_round_active(n, state, game):
-    game = jsonpickle.decode(game)
-    state = [False for item in state]
-    state[game.current_round - 1] = True
-    return state
-
-
-@app.callback(
     [Output(id_play_rock, 'active'), Output(id_play_paper, 'active'), Output(id_play_scissors, 'active'),
      Output(id_play_confirm, 'active'), Output(id_play_confirm, 'disabled'), Output(id_play_input, 'data')],
     [Input(id_play_rock, 'n_clicks'), Input(id_play_paper, 'n_clicks'), Input(id_play_scissors, 'n_clicks'),
      Input(id_play_confirm, 'n_clicks'), Input(id_next_round, 'n_clicks'), Input(id_new_game, 'n_clicks')],
-    State(id_play_input, 'data'), prevent_initial_call=True
+    [State(id_play_input, 'data'), State(id_game_store, 'data')], prevent_initial_call=True
 )
-def active_play_hand_buttons(n1, n2, n3, n4, n5, n6, play_input):
+def active_play_hand_buttons(n1, n2, n3, n4, n5, n6, play_input, game_data):
+    game = jsonpickle.decode(game_data)
     call_id = callback_context.triggered[0]['prop_id'].split('.')[0]
     if call_id == id_play_confirm:
+        game.hand_played = play_input
+        with open(sync_file_path, 'w') as outfile:
+            outfile.write(jsonpickle.encode(game))
         return [False, False, False, True, False, play_input]
     elif call_id == id_play_rock:
         return [True, False, False, False, False, rock]
@@ -206,11 +237,15 @@ def active_play_hand_buttons(n1, n2, n3, n4, n5, n6, play_input):
      Output(id_bet_result_input, 'data')],
     [Input(id_bet_win, 'n_clicks'), Input(id_bet_draw, 'n_clicks'), Input(id_bet_lose, 'n_clicks'),
      Input(id_bet_result_confirm, 'n_clicks'), Input(id_next_round, 'n_clicks'), Input(id_new_game, 'n_clicks')],
-    State(id_bet_result_input, 'data'), prevent_initial_call=True
+    [State(id_bet_result_input, 'data'), State(id_game_store, 'data')], prevent_initial_call=True
 )
-def active_play_hand_buttons(n1, n2, n3, n4, n5, n6, play_input):
+def active_play_hand_buttons(n1, n2, n3, n4, n5, n6, play_input, game_data):
+    game = jsonpickle.decode(game_data)
     call_id = callback_context.triggered[0]['prop_id'].split('.')[0]
     if call_id == id_bet_result_confirm:
+        game.bet_result = play_input
+        with open(sync_file_path, 'w') as outfile:
+            outfile.write(jsonpickle.encode(game))
         return [False, False, False, True, False, play_input]
     elif call_id == id_bet_win:
         return [True, False, False, False, False, 'win']
@@ -248,26 +283,12 @@ def place_bet(n1, n2, n3, n4, bet, game):
                 bet -= 1
             return [bet, 0, False]
         elif call_id == id_bet_confirm:
+            game.bet_chips = bet
+            with open(sync_file_path, 'w') as outfile:
+                outfile.write(jsonpickle.encode(game))
             return [0, bet, True]
         else:
             return [0, 0, False]
-
-
-@app.callback(
-    [Output(id_p1_inputs, 'children'), Output(id_p2_inputs, 'children')],
-    [Input(id_next_round, 'n_clicks'), Input(id_new_game, 'n_clicks')],
-    State(id_game_store, 'data')
-)
-def switch_inputs_per_round(n1, n2, game):
-    game = jsonpickle.decode(game)
-    call_id = callback_context.triggered[0]['prop_id'].split('.')[0]
-    if call_id == id_next_round:
-        if game.current_round % 2 == 0:
-            return [dbc.Row([dbc.Col(bet_inputs), dbc.Col(bet_hand_inputs)]), play_hand_inputs]
-        else:
-            return [play_hand_inputs, dbc.Row([dbc.Col(bet_inputs), dbc.Col(bet_hand_inputs)])]
-    else:
-        return [play_hand_inputs, dbc.Row([dbc.Col(bet_inputs), dbc.Col(bet_hand_inputs)])]
 
 
 # Server

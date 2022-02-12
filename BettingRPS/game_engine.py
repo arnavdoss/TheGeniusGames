@@ -15,6 +15,9 @@ class BettingRPS:
         self.log = []
         self.log.append(f'Game started with {n_rounds} rounds \n')
         self.current_round = 1
+        self.hand_played = None
+        self.bet_chips = None
+        self.bet_result = None
 
     def new_game(self, n_rounds: int):
         self.n_rounds = n_rounds
@@ -24,6 +27,9 @@ class BettingRPS:
         self.log = []
         self.log.append(f'Game started with {n_rounds} rounds \n')
         self.current_round = 1
+        self.hand_played = None
+        self.bet_chips = None
+        self.bet_result = None
 
     def play_round(self, played_hand: str, bet_result: str, bet_chips: int):
         if self.current_round < self.n_rounds:
@@ -51,6 +57,9 @@ class BettingRPS:
                     self.p1_chips += int(self.current_round / 3) + 1
             self.log.append(f'Chips: P1 = {self.p1_chips}, P2 = {self.p2_chips} \n')
             self.current_round += 1
+            self.hand_played = None
+            self.bet_chips = None
+            self.bet_result = None
         else:
             pass
 
